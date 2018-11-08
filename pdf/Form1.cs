@@ -1,8 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Text;
 using System.Windows.Forms;
 using System.IO;
 using Word = Microsoft.Office.Interop.Word;
@@ -13,7 +10,7 @@ using Excel = Microsoft.Office.Interop.Excel;
 //using PdfSharp.Drawing;
 using Document = iTextSharp.text.Document;
 using iTextSharp.text.pdf;
-using iTextSharp.text;
+using System.Threading;
 
 namespace pdf
 {
@@ -171,30 +168,38 @@ namespace pdf
             lst.Clear();
             FolderBrowserDialog dialog = new FolderBrowserDialog();
             dialog.Description = "请选择文件路径";
-            if (dialog.ShowDialog() == DialogResult.OK)
+            while (lst.Count==0)
             {
-                inputPath = dialog.SelectedPath;
-                textBox1.Text = inputPath;
-                getdir(inputPath, lst);
-                foreach (FileInfo f in lst)
+                if (dialog.ShowDialog() == DialogResult.OK)
                 {
-                    String type = "其他文档";
-                    if (f.Extension == ".docx")
-                        type = "Word文档";
-                    if (f.Extension == ".xlsx")
-                        type = "Execel文档";
-                    if (f.Extension == ".txt")
-                        type = "文本文档";
-                    int index = this.dataGridView1.Rows.Add();
-                    this.dataGridView1.Rows[index].Cells[0].Value = index + 1;
-                    this.dataGridView1.Rows[index].Cells[1].Value = f.Name;
-                    this.dataGridView1.Rows[index].Cells[2].Value = type;
+                    inputPath = dialog.SelectedPath;
+                    textBox1.Text = inputPath;
+                    getdir(inputPath, lst);
+                    if (lst.Count == 0)
+                    {
+                        MessageBox.Show("该目录下没有文件，请重新选择！", "警告");
+                    }
+                        foreach (FileInfo f in lst)
+                    {
+                        String type = "其他文档";
+                        if (f.Extension == ".docx" || f.Extension == ".doc")
+                            type = "Word文档";
+                        if (f.Extension == ".xlsx" || f.Extension == ".xls")
+                            type = "Excel文档";
+                        if (f.Extension == ".txt")
+                            type = "文本文档";
+                        int index = this.dataGridView1.Rows.Add();
+                        this.dataGridView1.Rows[index].Cells[0].Value = index + 1;
+                        this.dataGridView1.Rows[index].Cells[1].Value = f.Name;
+                        this.dataGridView1.Rows[index].Cells[2].Value = type;
+                    }
+                    progressBar1.Value = 0;
+                    progressBar1.Minimum = 0;
+                    progressBar1.Maximum = lst.Count;
+                    label3.Text = "已载入";
                 }
-                progressBar1.Value = 0;
-                progressBar1.Minimum = 0;
-                progressBar1.Maximum = lst.Count;
-                label3.Text = "已载入";
             }
+            
         }
 
         private void button2_Click(object sender, EventArgs e)
@@ -233,7 +238,7 @@ namespace pdf
             return newPath;
         }
 
-        private void button3_Click(object sender, EventArgs e)
+        void newth()
         {
             int flag = 1;
             if (radioButton2.Checked)
@@ -243,17 +248,17 @@ namespace pdf
             }
             foreach (FileInfo f in lst)
             {
-                if (f.Extension == ".docx")
-                    WordToPDF(f.FullName, toPDF(f, "docx", flag));
-                if (f.Extension == ".txt")
-                    WordToPDF(f.FullName, toPDF(f, "txt", flag));
-                if (f.Extension == ".xlsx")
-                    ExcelToPDF(f.FullName, toPDF(f, "xlsx", flag));
+                string ex = f.Extension.Replace(".", "");
+                if (ex == "docx" || ex == "doc" || ex == "txt")
+                    WordToPDF(f.FullName, toPDF(f, ex, flag));
+                if (ex == "xlsx" || ex == "xls")
+                    ExcelToPDF(f.FullName, toPDF(f, ex, flag));
                 progressBar1.Value++;
-                label3.Text = progressBar1.Value + "/" + lst.Count;
+                //label3.Text = progressBar1.Value + "/" + lst.Count;
             }
             if (radioButton2.Checked)
             {
+                // label3.Text = "正在合并";
                 List<FileInfo> l = new List<FileInfo>();
                 List<String> pdf = new List<String>();
                 DirectoryInfo dir = new DirectoryInfo(outputPath);
@@ -261,8 +266,7 @@ namespace pdf
                 foreach (FileInfo f in l)
                     pdf.Add(f.FullName);
                 string na = dir.Name;
-                label3.Text = "正在合并";
-                comPDF(pdf,outputPath+"\\"+dir.Name+".pdf");
+                comPDF(pdf, outputPath + "\\" + dir.Name + ".pdf");
 
                 //String path1 = "", path2, outputpath_t, temp;
                 //outputpath_t = outputPath + "\\1.pdf";
@@ -284,14 +288,79 @@ namespace pdf
                 //    tempf.CopyTo(temp);
                 //    path1 = temp;
                 //}
-                label3.Text = "正在清理临时文件";
+                //label3.Text = "正在清理临时文件";
                 foreach (FileInfo f in l)
                     f.Delete();
                 Directory.Delete(outputPath + "\\temp");
                 progressBar1.Value++;
+                //label3.Text = progressBar1.Value + "/" + lst.Count;
             }
-            
+        }
+
+        private void button3_Click(object sender, EventArgs e)
+        {
+            label3.Text = "开始转换";
+            int flag = 1;
+            if (radioButton2.Checked)
+            {
+                flag = 0;
+                progressBar1.Maximum++;
+            }
+            foreach (FileInfo f in lst)
+            {
+                string ex = f.Extension.Replace(".", "");
+                if (ex == "docx" || ex == "doc" || ex == "txt")
+                    WordToPDF(f.FullName, toPDF(f, ex, flag));
+                if (ex == "xlsx" || ex == "xls")
+                    ExcelToPDF(f.FullName, toPDF(f, ex, flag));
+                progressBar1.Value++;
+                //label3.Text = progressBar1.Value + "/" + lst.Count;
+            }
+            if (radioButton2.Checked)
+            {
+                // label3.Text = "正在合并";
+                List<FileInfo> l = new List<FileInfo>();
+                List<String> pdf = new List<String>();
+                DirectoryInfo dir = new DirectoryInfo(outputPath);
+                getdir(outputPath + "\\temp", l);
+                foreach (FileInfo f in l)
+                    pdf.Add(f.FullName);
+                string na = dir.Name;
+                comPDF(pdf, outputPath + "\\" + dir.Name + ".pdf");
+
+                //String path1 = "", path2, outputpath_t, temp;
+                //outputpath_t = outputPath + "\\1.pdf";
+                //temp = outputPath + "\\temp.pdf";
+                //foreach (FileInfo f in l)
+                //{
+                //    if (l.IndexOf(f) == 0)
+                //    {
+                //        path1 = f.FullName;
+                //        continue;
+                //    }
+                //    path2 = f.FullName;
+                //    if (File.Exists(outputpath_t))
+                //        File.Delete(outputpath_t);
+                //    //comPDF(path1, path2, outputpath_t);
+                //    FileInfo tempf = new FileInfo(outputpath_t);
+                //    if (File.Exists(temp))
+                //        File.Delete(temp);
+                //    tempf.CopyTo(temp);
+                //    path1 = temp;
+                //}
+                //label3.Text = "正在清理临时文件";
+                foreach (FileInfo f in l)
+                    f.Delete();
+                Directory.Delete(outputPath + "\\temp");
+                progressBar1.Value++;
+                //label3.Text = progressBar1.Value + "/" + lst.Count;
+            }
             label3.Text = "已完成";
+        }
+
+        private void button4_Click(object sender, EventArgs e)
+        {
+            this.Close();
         }
     }
 }
