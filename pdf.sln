@@ -1,0 +1,20 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2010
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "pdf", "pdf\pdf.csproj", "{DF4E587D-8F51-4930-A925-E04673B5CE05}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x86 = Debug|x86
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{DF4E587D-8F51-4930-A925-E04673B5CE05}.Debug|x86.ActiveCfg = Debug|x86
+		{DF4E587D-8F51-4930-A925-E04673B5CE05}.Debug|x86.Build.0 = Debug|x86
+		{DF4E587D-8F51-4930-A925-E04673B5CE05}.Release|x86.ActiveCfg = Release|x86
+		{DF4E587D-8F51-4930-A925-E04673B5CE05}.Release|x86.Build.0 = Release|x86
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
