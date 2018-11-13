@@ -56,10 +56,10 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="itextsharp">
-      <HintPath>..\..\itextsharp.dll</HintPath>
+      <HintPath>.\itextsharp.dll</HintPath>
     </Reference>
     <Reference Include="PdfSharp">
-      <HintPath>..\..\PdfSharp.dll</HintPath>
+      <HintPath>.\PdfSharp.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data.DataSetExtensions" />

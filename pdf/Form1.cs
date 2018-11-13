@@ -4,13 +4,10 @@ using System.Windows.Forms;
 using System.IO;
 using Word = Microsoft.Office.Interop.Word;
 using Excel = Microsoft.Office.Interop.Excel;
-//using Microsoft.Office.Core;
-//using PdfSharp.Pdf.IO;
-//using PdfSharp.Pdf;
-//using PdfSharp.Drawing;
+using SharpIO = PdfSharp.Pdf.IO;
+using Sharp = PdfSharp.Pdf;
 using Document = iTextSharp.text.Document;
 using iTextSharp.text.pdf;
-using System.Threading;
 
 namespace pdf
 {
@@ -53,7 +50,7 @@ namespace pdf
                 document = application.Documents.Open(inePath);
                 document.ExportAsFixedFormat(outputPath, Word.WdExportFormat.wdExportFormatPDF);
                 result = true;
-                
+
             }
             catch (Exception e)
             {
@@ -91,50 +88,56 @@ namespace pdf
             }
             finally
             {
-                    workBook.Close(true, missing, missing);
-                    application.Quit();
+                workBook.Close(true, missing, missing);
+                application.Quit();
             }
             return result;
         }
 
-        //private void comPDF(String filename1, String filename2,String out3)
-        //{
-        //    PdfDocument inputDocument1 = PdfReader.Open(filename1, PdfDocumentOpenMode.Import);
-        //    PdfDocument inputDocument2 = PdfReader.Open(filename2, PdfDocumentOpenMode.Import);
-        //    PdfDocument outputDocument = new PdfDocument();
-        //    // Show consecutive pages facing. Requires Acrobat 5 or higher.
-        //    outputDocument.PageLayout = PdfPageLayout.TwoColumnLeft;
-        //    XFont font = new XFont("Verdana", 10, XFontStyle.Bold);
-        //    XStringFormat format = new XStringFormat();
-        //    format.Alignment = XStringAlignment.Center;
-        //    format.LineAlignment = XLineAlignment.Far;
-        //    //XGraphics gfx;
-        //    //XRect box;
-        //    int count = Math.Max(inputDocument1.PageCount, inputDocument2.PageCount);
-        //    for (int idx = 0; idx < count; idx++)
-        //    {
-        //        PdfPage page1 = inputDocument1.PageCount > idx ?
-        //          inputDocument1.Pages[idx] : new PdfPage();
-        //        PdfPage page2 = inputDocument2.PageCount > idx ?
-        //          inputDocument2.Pages[idx] : new PdfPage();
+        private void comPDF0(String filename1, String filename2, String out3)
+        {
+            Sharp.PdfDocument inputDocument1 = SharpIO.PdfReader.Open(filename1, SharpIO.PdfDocumentOpenMode.Import);
+            Sharp.PdfDocument inputDocument2 = SharpIO.PdfReader.Open(filename2, SharpIO.PdfDocumentOpenMode.Import);
+            Sharp.PdfDocument outputDocument = new Sharp.PdfDocument();
+            // Show consecutive pages facing. Requires Acrobat 5 or higher.
+            outputDocument.PageLayout = Sharp.PdfPageLayout.TwoColumnLeft;
+            int count = Math.Max(inputDocument1.PageCount, inputDocument2.PageCount);
+            for (int idx = 0; idx < count; idx++)
+            {
+                Sharp.PdfPage page1 = inputDocument1.PageCount > idx ?
+                  inputDocument1.Pages[idx] : new Sharp.PdfPage();
+                Sharp.PdfPage page2 = inputDocument2.PageCount > idx ?
+                  inputDocument2.Pages[idx] : new Sharp.PdfPage();
 
-        //        // Add both pages to the output document
-        //        page1 = outputDocument.AddPage(page1);
-        //        page2 = outputDocument.AddPage(page2);
+                // Add both pages to the output document
+                page1 = outputDocument.AddPage(page1);
+                page2 = outputDocument.AddPage(page2);
 
-        //        // Write document file name and page number on each page
-        //        //gfx = XGraphics.FromPdfPage(page1);
-        //        //box = page1.MediaBox.ToXRect();
-        //        //box.Inflate(0, -10);
-        //        //gfx.DrawString(String.Format("{0} • {1}", filename1, idx + 1), font, XBrushes.Red, box, format);
-        //        //gfx = XGraphics.FromPdfPage(page2);
-        //        //box = page2.MediaBox.ToXRect();
-        //        //box.Inflate(0, -10);
-        //        //gfx.DrawString(String.Format("{0} • {1}", filename2, idx + 1), font, XBrushes.Red, box, format);
-        //    }
-        //    string filename = out3;
-        //    outputDocument.Save(filename);
-        //}
+
+            }
+            string filename = out3;
+            outputDocument.Save(filename);
+        }
+
+        private void comPDF0(List<string> filelist, string path0)
+        {
+            Sharp.PdfDocument outputDocument = new Sharp.PdfDocument();
+            outputDocument.PageLayout = Sharp.PdfPageLayout.TwoColumnLeft;
+            foreach (string f in filelist)
+            {
+                Sharp.PdfDocument inputDocument = SharpIO.PdfReader.Open(f, SharpIO.PdfDocumentOpenMode.Import);
+                int count = inputDocument.PageCount;
+                for (int idx = 0; idx < count; idx++)
+                {
+                    Sharp.PdfPage page = inputDocument.Pages[idx];
+                    outputDocument.AddPage(page);
+                }
+                inputDocument.Close();
+            }
+            string filename = path0;
+            outputDocument.Save(filename);
+
+        }
 
         private void comPDF(List<string> filelist, string path0)
         {
@@ -166,9 +169,10 @@ namespace pdf
         private void button1_Click(object sender, EventArgs e)
         {
             lst.Clear();
+            dataGridView1.Rows.Clear();
             FolderBrowserDialog dialog = new FolderBrowserDialog();
             dialog.Description = "请选择文件路径";
-            while (lst.Count==0)
+            while (lst.Count == 0)
             {
                 if (dialog.ShowDialog() == DialogResult.OK)
                 {
@@ -179,7 +183,7 @@ namespace pdf
                     {
                         MessageBox.Show("该目录下没有文件，请重新选择！", "警告");
                     }
-                        foreach (FileInfo f in lst)
+                    foreach (FileInfo f in lst)
                     {
                         String type = "其他文档";
                         if (f.Extension == ".docx" || f.Extension == ".doc")
@@ -199,7 +203,7 @@ namespace pdf
                     label3.Text = "已载入";
                 }
             }
-            
+
         }
 
         private void button2_Click(object sender, EventArgs e)
@@ -254,11 +258,9 @@ namespace pdf
                 if (ex == "xlsx" || ex == "xls")
                     ExcelToPDF(f.FullName, toPDF(f, ex, flag));
                 progressBar1.Value++;
-                //label3.Text = progressBar1.Value + "/" + lst.Count;
             }
             if (radioButton2.Checked)
             {
-                // label3.Text = "正在合并";
                 List<FileInfo> l = new List<FileInfo>();
                 List<String> pdf = new List<String>();
                 DirectoryInfo dir = new DirectoryInfo(outputPath);
@@ -267,38 +269,16 @@ namespace pdf
                     pdf.Add(f.FullName);
                 string na = dir.Name;
                 comPDF(pdf, outputPath + "\\" + dir.Name + ".pdf");
-
-                //String path1 = "", path2, outputpath_t, temp;
-                //outputpath_t = outputPath + "\\1.pdf";
-                //temp = outputPath + "\\temp.pdf";
-                //foreach (FileInfo f in l)
-                //{
-                //    if (l.IndexOf(f) == 0)
-                //    {
-                //        path1 = f.FullName;
-                //        continue;
-                //    }
-                //    path2 = f.FullName;
-                //    if (File.Exists(outputpath_t))
-                //        File.Delete(outputpath_t);
-                //    //comPDF(path1, path2, outputpath_t);
-                //    FileInfo tempf = new FileInfo(outputpath_t);
-                //    if (File.Exists(temp))
-                //        File.Delete(temp);
-                //    tempf.CopyTo(temp);
-                //    path1 = temp;
-                //}
-                //label3.Text = "正在清理临时文件";
                 foreach (FileInfo f in l)
                     f.Delete();
                 Directory.Delete(outputPath + "\\temp");
                 progressBar1.Value++;
-                //label3.Text = progressBar1.Value + "/" + lst.Count;
             }
         }
 
         private void button3_Click(object sender, EventArgs e)
         {
+            progressBar1.Value = progressBar1.Minimum;
             label3.Text = "开始转换";
             int flag = 1;
             if (radioButton2.Checked)
@@ -314,11 +294,9 @@ namespace pdf
                 if (ex == "xlsx" || ex == "xls")
                     ExcelToPDF(f.FullName, toPDF(f, ex, flag));
                 progressBar1.Value++;
-                //label3.Text = progressBar1.Value + "/" + lst.Count;
             }
             if (radioButton2.Checked)
             {
-                // label3.Text = "正在合并";
                 List<FileInfo> l = new List<FileInfo>();
                 List<String> pdf = new List<String>();
                 DirectoryInfo dir = new DirectoryInfo(outputPath);
@@ -326,34 +304,11 @@ namespace pdf
                 foreach (FileInfo f in l)
                     pdf.Add(f.FullName);
                 string na = dir.Name;
-                comPDF(pdf, outputPath + "\\" + dir.Name + ".pdf");
-
-                //String path1 = "", path2, outputpath_t, temp;
-                //outputpath_t = outputPath + "\\1.pdf";
-                //temp = outputPath + "\\temp.pdf";
-                //foreach (FileInfo f in l)
-                //{
-                //    if (l.IndexOf(f) == 0)
-                //    {
-                //        path1 = f.FullName;
-                //        continue;
-                //    }
-                //    path2 = f.FullName;
-                //    if (File.Exists(outputpath_t))
-                //        File.Delete(outputpath_t);
-                //    //comPDF(path1, path2, outputpath_t);
-                //    FileInfo tempf = new FileInfo(outputpath_t);
-                //    if (File.Exists(temp))
-                //        File.Delete(temp);
-                //    tempf.CopyTo(temp);
-                //    path1 = temp;
-                //}
-                //label3.Text = "正在清理临时文件";
+                comPDF0(pdf, outputPath + "\\" + dir.Name + ".pdf");
                 foreach (FileInfo f in l)
                     f.Delete();
                 Directory.Delete(outputPath + "\\temp");
                 progressBar1.Value++;
-                //label3.Text = progressBar1.Value + "/" + lst.Count;
             }
             label3.Text = "已完成";
         }
@@ -362,5 +317,6 @@ namespace pdf
         {
             this.Close();
         }
+
     }
 }
